@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Seguimiento de entregables</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,520;9..144,640&family=Outfit:wght@340;420;520;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c0e12;
+      --line: rgba(232, 220, 198, 0.12);
+      --line-strong: rgba(232, 220, 198, 0.22);
+      --text: #ece7df;
+      --muted: #9a9388;
+      --faint: #6e675e;
+      --brass: #d7b07a;
+      --brass-dim: rgba(215, 176, 122, 0.16);
+      --proceso: #e2a85a;
+      --proceso-bg: rgba(226, 168, 90, 0.12);
+      --entregado: #8fbfa4;
+      --entregado-bg: rgba(143, 191, 164, 0.12);
+      --futuro: #93a4c4;
+      --futuro-bg: rgba(147, 164, 196, 0.12);
+      --danger: #e08b78;
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      color: var(--text);
+      font-family: "Outfit", "Avenir Next", "Segoe UI", sans-serif;
+      font-weight: 420;
+      background:
+        radial-gradient(1200px 500px at 10% -10%, rgba(215, 176, 122, 0.08), transparent 55%),
+        radial-gradient(900px 480px at 100% 0%, rgba(147, 164, 196, 0.07), transparent 50%),
+        var(--bg);
+      letter-spacing: 0.01em;
+    }
+
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+
+    .wrap {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .banner {
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--line-strong);
+      border-radius: 12px;
+      background: rgba(215, 176, 122, 0.08);
+      color: #f0e2c8;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    header.top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+
+    .kicker {
+      margin: 0 0 8px;
+      color: var(--brass);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-weight: 520;
+      font-size: clamp(32px, 4vw, 46px);
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+
+    .sub { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+
+    .identity {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 240px;
+    }
+
+    label.field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      outline: none;
+    }
+    input[type="text"]:focus {
+      border-color: var(--brass);
+      box-shadow: 0 0 0 3px var(--brass-dim);
+    }
+
+    .progress-block { display: flex; align-items: center; gap: 14px; }
+    .fraction {
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .fraction span { color: var(--muted); font-size: 16px; }
+    .bar {
+      width: 148px;
+      height: 6px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+    }
+    .bar > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #b8894d, var(--entregado));
+    }
+    .progress-copy { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    .indicadores {
+      margin: 0 0 16px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+      box-shadow: var(--shadow);
+    }
+    .indicadores-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .indicadores h2 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .indicadores-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .kpi {
+      padding: 12px 12px 11px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0, 0, 0, 0.18);
+      min-width: 0;
+    }
+    .kpi.wide { grid-column: span 2; }
+    .kpi-k {
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .kpi-v {
+      margin-top: 6px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: 28px;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .kpi.wide .kpi-v { font-size: 22px; }
+    .kpi-d { margin-top: 4px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+    .kpi.alerta .kpi-v { color: var(--danger); }
+    .kpi.ok .kpi-v { color: var(--entregado); }
+    .situacion { margin: 12px 0 0; color: var(--muted); font-size: 14px; line-height: 1.45; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 320px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      padding: 18px 18px 0;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .panel-note { color: var(--faint); font-size: 12px; }
+
+    .crono { padding: 8px 8px 16px; }
+    .month {
+      margin: 14px 12px 6px;
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .rail { position: relative; margin: 0 10px 0 18px; }
+    .rail::before {
+      content: "";
+      position: absolute;
+      left: 7px;
+      top: 8px;
+      bottom: 8px;
+      width: 1px;
+      background: var(--line-strong);
+    }
+
+    .event {
+      position: relative;
+      display: grid;
+      grid-template-columns: 16px 1fr;
+      gap: 12px;
+      width: 100%;
+      margin: 0;
+      padding: 10px 10px 10px 0;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      border-radius: 12px;
+    }
+    .event:hover { background: rgba(255,255,255,0.03); }
+    .event:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+    .event.active { background: var(--brass-dim); }
+    .event > span:last-child {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .dot {
+      width: 15px;
+      height: 15px;
+      margin-top: 3px;
+      border-radius: 50%;
+      border: 1.5px solid var(--faint);
+      background: var(--bg);
+      position: relative;
+      z-index: 1;
+    }
+    .event.entregado .dot { background: var(--entregado); border-color: var(--entregado); }
+    .event.en-proceso .dot { background: var(--proceso); border-color: var(--proceso); box-shadow: 0 0 0 4px rgba(226, 168, 90, 0.18); }
+    .event.a-futuro .dot { background: transparent; border-color: var(--futuro); }
+
+    .event-date { color: var(--brass); font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
+    .event-title { font-size: 15px; font-weight: 520; line-height: 1.3; }
+    .event-detail { color: var(--muted); font-size: 13px; line-height: 1.4; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 99px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .tag.vencido { color: var(--danger); background: rgba(224, 139, 120, 0.12); }
+    .tag.hoy { color: var(--brass); background: var(--brass-dim); }
+    .tag.sprint { color: #d7c4ea; background: rgba(168, 140, 196, 0.16); }
+    .tag.eval { color: #f0c2b8; background: rgba(224, 139, 120, 0.12); }
+
+    .checklist-tools {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px 0;
+    }
+    .ghost {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 4px 0;
+    }
+    .ghost:hover { color: var(--text); }
+
+    .list { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+    .item {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+      width: 100%;
+      padding: 14px 12px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      background: transparent;
+      text-align: left;
+    }
+    .item:hover { background: rgba(255,255,255,0.035); border-color: var(--line); }
+    .item:focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
+    .item.flash { border-color: var(--brass); background: var(--brass-dim); }
+    .item > span:nth-child(2) {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .box {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      border-radius: 5px;
+      border: 1.5px solid var(--faint);
+      display: grid;
+      place-items: center;
+    }
+    .item.done .box { background: var(--entregado); border-color: var(--entregado); }
+    .box svg { opacity: 0; }
+    .item.done .box svg { opacity: 1; }
+    .item.done .item-title {
+      color: var(--muted);
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+    }
+    .item-title { font-size: 16px; font-weight: 520; line-height: 1.3; }
+    .item-meta { color: var(--muted); font-size: 13px; line-height: 1.4; }
+
+    .pill {
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 5px 8px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+    .pill.en-proceso { color: var(--proceso); background: var(--proceso-bg); }
+    .pill.entregado { color: var(--entregado); background: var(--entregado-bg); }
+    .pill.a-futuro { color: var(--futuro); background: var(--futuro-bg); }
+
+    .states { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+    .lane {
+      border-radius: 14px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,0.15);
+    }
+    .lane h3 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .lane.en-proceso h3 { color: var(--proceso); }
+    .lane.entregado h3 { color: var(--entregado); }
+    .lane.a-futuro h3 { color: var(--futuro); }
+    .count {
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      display: grid;
+      place-items: center;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+    .chip {
+      padding: 8px 0;
+      border-top: 1px solid var(--line);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+    .chip:first-of-type { border-top: 0; }
+    .chip small { color: var(--muted); font-size: 12px; display: block; margin-top: 2px; }
+    .empty { color: var(--faint); font-size: 13px; padding: 4px 0 2px; }
+
+    footer.note { margin-top: 16px; color: var(--faint); font-size: 12px; }
+
+    @media (max-width: 980px) {
+      header.top { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: 1fr; }
+      .identity { min-width: 0; }
+      .indicadores-grid { grid-template-columns: 1fr 1fr; }
+      .kpi.wide { grid-column: span 2; }
+    }
+    @media (max-width: 640px) {
+      .indicadores-grid { grid-template-columns: 1fr; }
+      .kpi.wide { grid-column: auto; }
+    }
+
+    /* ===== Panel de sprint en vivo (lee del Google Sheet) ===== */
+    .sprint-live {
+      margin: 22px 0 8px;
+      padding: 18px;
+      border: 1px solid var(--line-strong);
+      border-radius: var(--radius);
+      background: rgba(215, 176, 122, 0.05);
+    }
+    .sprint-live-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+    .sprint-live-head h2 { margin: 0; font-family: "Fraunces", serif; font-weight: 640; font-size: 20px; color: var(--text); }
+    .live-meta { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--entregado); box-shadow: 0 0 0 0 rgba(143,191,164,0.6); animation: livepulse 2s infinite; }
+    .live-dot.err { background: var(--danger); animation: none; }
+    @keyframes livepulse { 0% { box-shadow: 0 0 0 0 rgba(143,191,164,0.5);} 70% { box-shadow: 0 0 0 7px rgba(143,191,164,0);} 100% { box-shadow: 0 0 0 0 rgba(143,191,164,0);} }
+    .sprint-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 780px) { .sprint-cards { grid-template-columns: 1fr; } }
+    .sprint-card { border: 1px solid var(--line); border-radius: 14px; padding: 15px; background: rgba(12,14,18,0.35); }
+    .sprint-card h3 { margin: 0 0 4px; font-family: "Fraunces", serif; font-weight: 620; font-size: 17px; color: var(--brass); }
+    .sprint-card .goal { margin: 0 0 12px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+    .sprint-metrics { display: flex; gap: 18px; margin-bottom: 10px; }
+    .sprint-metric .n { font-family: "Fraunces", serif; font-size: 22px; font-weight: 640; color: var(--text); }
+    .sprint-metric .l { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; }
+    .sprint-bar { height: 8px; border-radius: 6px; background: rgba(232,220,198,0.10); overflow: hidden; margin-bottom: 14px; }
+    .sprint-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--brass), var(--entregado)); border-radius: 6px; transition: width .6s ease; }
+    .hu-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px; }
+    .hu-row:first-of-type { border-top: none; }
+    .hu-id { font-variant-numeric: tabular-nums; color: var(--faint); min-width: 52px; font-size: 12px; }
+    .hu-title { flex: 1; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hu-pts { color: var(--muted); font-size: 12px; min-width: 26px; text-align: right; }
+    .hu-estado { font-size: 11px; padding: 2px 8px; border-radius: 20px; white-space: nowrap; }
+    .e-done { color: var(--entregado); background: var(--entregado-bg); }
+    .e-doing, .e-en-prueba { color: var(--proceso); background: var(--proceso-bg); }
+    .e-blocked { color: var(--danger); background: rgba(224,139,120,0.12); }
+    .e-to-do { color: var(--futuro); background: var(--futuro-bg); }
+    .sprint-empty { color: var(--muted); font-size: 13px; padding: 8px 0; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="banner">
+      Del 23/09 al 28/10 las fechas siguen el ajuste de Sprint Planning – MVP.
+      El resto sale del cronograma de la materia. El desarrollo del MVP corre durante todo ese tramo.
+    </div>
+
+    <header class="top">
+      <div>
+        <p class="kicker" id="kicker">UADE</p>
+        <h1 id="titulo">Seguimiento de entregables</h1>
+        <p class="sub" id="subtitulo"></p>
+      </div>
+      <div class="identity">
+        <label class="field">
+          Tu nombre
+          <input id="nombre" type="text" autocomplete="name" placeholder="Nombre y apellido" />
+        </label>
+        <div class="progress-block">
+          <div class="fraction" id="fraction">0<span>/0</span></div>
+          <div>
+            <div class="bar" aria-hidden="true"><i id="bar"></i></div>
+            <div class="progress-copy" id="progress-copy"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="indicadores" aria-labelledby="h-indicadores">
+      <div class="indicadores-head">
+        <h2 id="h-indicadores">Indicadores de la materia</h2>
+        <span class="panel-note">Se actualizan con el checklist</span>
+      </div>
+      <div class="indicadores-grid" id="indicadores"></div>
+      <p class="situacion" id="situacion"></p>
+    </section>
+
+    <section class="sprint-live" aria-labelledby="h-sprint-live">
+      <div class="sprint-live-head">
+        <h2 id="h-sprint-live">Estado del sprint — en vivo</h2>
+        <span class="live-meta"><span class="live-dot" id="live-dot"></span><span id="sprint-updated">conectando con la planilla…</span></span>
+      </div>
+      <div class="sprint-cards" id="sprint-cards"></div>
+    </section>
+
+    <main class="layout">
+      <section class="panel" aria-labelledby="h-crono">
+        <div class="panel-head">
+          <h2 id="h-crono">Cronograma</h2>
+          <span class="panel-note">Fechas</span>
+        </div>
+        <div class="crono" id="crono"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-check">
+        <div class="panel-head">
+          <h2 id="h-check">Checklist</h2>
+          <span class="panel-note">Marcá lo entregado</span>
+        </div>
+        <div class="checklist-tools">
+          <span class="panel-note" id="pendientes-copy"></span>
+          <button class="ghost" id="reset" type="button">Reiniciar marcas</button>
+        </div>
+        <div class="list" id="lista"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-estado">
+        <div class="panel-head">
+          <h2 id="h-estado">Estado</h2>
+          <span class="panel-note">Según fecha y marca</span>
+        </div>
+        <div class="states" id="estados"></div>
+      </section>
+    </main>
+
+    <footer class="note">Las marcas y el nombre quedan guardados en este navegador.</footer>
+  </div>
+
+  <script>
+    const CONFIG = {
+      kicker: "UADE · Seminario",
+      titulo: "Seguimiento de entregables",
+      materia: "Seminario · FAIN · Inf.",
+      comision: "2.º cuatrimestre 2026",
+      docente: "Silvina Novoa",
+      horario: "Miércoles 18:45 a 22:15"
+    };
+
+    const ENTREGABLES = [
+      { id: "c1", fecha: "2026-08-05", clase: "1", titulo: "Evaluación de alternativas", detalle: "Entrega grupal, una por integrante." },
+      { id: "c2", fecha: "2026-08-12", clase: "2", titulo: "Habilidades y competencias", detalle: "Entrega grupal, detalle por integrante." },
+      { id: "c3", fecha: "2026-08-19", clase: "3", titulo: "User Journey, empatía y escenario", detalle: "Observación, User Journey Map, mapa de empatía y escenario actual." },
+      { id: "c4", fecha: "2026-08-26", clase: "4", titulo: "Business Model Canvas", detalle: "Análisis de la solución, plan de negocio, costos y herramientas." },
+      { id: "c5", fecha: "2026-09-02", clase: "5", titulo: "Impact Mapping y Story Mapping", detalle: "Release y mapeo de historias." },
+      { id: "c6", fecha: "2026-09-05", clase: "Taller", titulo: "Product backlog y Roadmap", detalle: "Taller de escritura y oralidad. Valida el plan con la entrega final." },
+      { id: "c7", fecha: "2026-09-09", clase: "6", titulo: "The Pitch", detalle: "Entrega impresa y presentación. Promedio de notas individuales.", tipo: "evaluacion" },
+      { id: "c8", fecha: "2026-09-16", clase: "7", titulo: "Sprint Planning y backlog priorizado", detalle: "Continuación de la planificación. Scrum, Kanban y método ágil." },
+      { id: "c9", fecha: "2026-09-23", clase: "8", sprint: "Sprint 1", titulo: "Sprint Planning y Taller Retro", detalle: "Teoría: Sprint Planning. Práctica: taller de retrospectiva." },
+      { id: "c10", fecha: "2026-09-30", clase: "9", sprint: "Sprint 1", titulo: "HU, UX/UI y Sprint Review 1", detalle: "Tablero, informe de review y detalle de historias de usuario." },
+      { id: "c11", fecha: "2026-10-07", clase: "10", sprint: "Sprint 1", titulo: "Retrospectiva 1 y OKRs/KPIs", detalle: "Presentación de la retrospectiva y mediciones con indicadores." },
+      { id: "c12", fecha: "2026-10-14", clase: "11", sprint: "Sprint 2", titulo: "MVP y tableros del equipo", detalle: "Desarrollo del MVP y tableros por equipo con OKRs y KPIs." },
+      { id: "c13", fecha: "2026-10-21", clase: "12", sprint: "Sprint 2", titulo: "Informes de avance y Sprint Review 2", detalle: "Informes de avance y gestión." },
+      { id: "c14", fecha: "2026-10-28", clase: "13", sprint: "Sprint 2", titulo: "Documentación final y defensa", detalle: "Story Telling, retrospectiva, presentación 2 y entrega de documentación.", tipo: "evaluacion" },
+      { id: "c15", fecha: "2026-11-11", clase: "15", titulo: "Presentación de equipos", detalle: "Primera fecha de presentación.", tipo: "evaluacion" },
+      { id: "c16", fecha: "2026-11-18", clase: "16", titulo: "Presentación de equipos", detalle: "Segunda fecha de presentación.", tipo: "evaluacion" },
+      { id: "c17", fecha: "2026-11-25", clase: "17", titulo: "Recuperatorio o final adelantado", detalle: "Según corresponda.", tipo: "evaluacion" },
+      { id: "c18", fecha: "2026-12-09", clase: "Final", titulo: "Final regular", detalle: "Examen final.", tipo: "evaluacion" }
+    ];
+
+    const STORAGE_KEY = "seguimiento-uade-seminario-2026";
+    const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+    const MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const DIAS = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"];
+    const LABELS = { "en-proceso": "En proceso", entregado: "Entregado", "a-futuro": "A futuro" };
+
+    const state = load();
+    const $ = (id) => document.getElementById(id);
+
+    function load() {
+      try {
+        const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (!data) return { nombre: "", hechos: [] };
+        return {
+          nombre: typeof data.nombre === "string" ? data.nombre : "",
+          hechos: Array.isArray(data.hechos) ? data.hechos : []
+        };
+      } catch {
+        return { nombre: "", hechos: [] };
+      }
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function parseFecha(iso) {
+      const [y, m, d] = iso.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function inicioDeHoy() {
+      const n = new Date();
+      return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+    }
+
+    function mismaFecha(a, b) {
+      return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+    }
+
+    function fechaCorta(iso) {
+      const f = parseFecha(iso);
+      return DIAS[f.getDay()] + " " + f.getDate() + " " + MESES_CORTOS[f.getMonth()];
+    }
+
+    function ordenados() {
+      return ENTREGABLES.slice().sort((a, b) => parseFecha(a.fecha) - parseFecha(b.fecha) || a.titulo.localeCompare(b.titulo, "es"));
+    }
+
+    function clasificar() {
+      const hoy = inicioDeHoy();
+      const items = ordenados();
+      const hechos = new Set(state.hechos);
+      const mapa = {};
+      const pendientes = items.filter((item) => !hechos.has(item.id));
+      const vencidosOHoy = pendientes.filter((item) => parseFecha(item.fecha) <= hoy);
+      const futuros = pendientes.filter((item) => parseFecha(item.fecha) > hoy);
+      items.forEach((item) => { if (hechos.has(item.id)) mapa[item.id] = "entregado"; });
+      vencidosOHoy.forEach((item) => { mapa[item.id] = "en-proceso"; });
+      if (futuros[0]) mapa[futuros[0].id] = "en-proceso";
+      futuros.slice(1).forEach((item) => { mapa[item.id] = "a-futuro"; });
+      return mapa;
+    }
+
+    function vencido(iso) {
+      return parseFecha(iso) < inicioDeHoy();
+    }
+
+    function esc(text) {
+      return String(text)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+
+    function tagsDe(item, estado) {
+      const f = parseFecha(item.fecha);
+      const tags = [];
+      if (item.sprint) tags.push('<span class="tag sprint">' + esc(item.sprint) + "</span>");
+      if (item.tipo === "evaluacion") tags.push('<span class="tag eval">Evaluación</span>');
+      if (mismaFecha(f, inicioDeHoy())) tags.push('<span class="tag hoy">Hoy</span>');
+      if (estado !== "entregado" && vencido(item.fecha)) tags.push('<span class="tag vencido">Vencido</span>');
+      return tags.length ? '<span class="tags">' + tags.join("") + "</span>" : "";
+    }
+
+    function renderCabeza() {
+      $("kicker").textContent = CONFIG.kicker;
+      $("titulo").textContent = CONFIG.titulo;
+      $("subtitulo").textContent = [CONFIG.materia, CONFIG.comision, CONFIG.docente, CONFIG.horario].filter(Boolean).join(" · ");
+      $("nombre").value = state.nombre;
+      document.title = CONFIG.titulo + " · " + CONFIG.materia;
+    }
+
+    function renderProgreso() {
+      const total = ENTREGABLES.length;
+      const hechos = state.hechos.filter((id) => ENTREGABLES.some((item) => item.id === id)).length;
+      const pct = total === 0 ? 0 : Math.round((hechos / total) * 100);
+      $("fraction").innerHTML = hechos + "<span>/" + total + "</span>";
+      $("bar").style.width = pct + "%";
+      $("progress-copy").textContent = pct === 100 ? "Cronograma completo" : pct + "% entregado";
+      const pendientes = total - hechos;
+      $("pendientes-copy").textContent = pendientes === 0 ? "Todo marcado" : pendientes + (pendientes === 1 ? " pendiente" : " pendientes");
+    }
+
+    function renderCrono(mapa) {
+      const items = ordenados();
+      let mesActual = "";
+      let html = "";
+      items.forEach((item) => {
+        const f = parseFecha(item.fecha);
+        const mes = MESES[f.getMonth()] + " " + f.getFullYear();
+        if (mes !== mesActual) {
+          if (mesActual) html += "</div>";
+          mesActual = mes;
+          html += '<div class="month">' + esc(mes) + '</div><div class="rail">';
+        }
+        const estado = mapa[item.id];
+        const clase = item.clase === "Taller" || item.clase === "Final" ? item.clase : "Clase " + item.clase;
+        html += '<button class="event ' + estado + '" type="button" data-jump="' + esc(item.id) + '">'
+          + '<span class="dot" aria-hidden="true"></span><span>'
+          + '<span class="event-date">' + esc(fechaCorta(item.fecha) + " · " + clase) + "</span>"
+          + '<span class="event-title">' + esc(item.titulo) + "</span>"
+          + '<span class="event-detail">' + esc(item.detalle) + "</span>"
+          + tagsDe(item, estado)
+          + "</span></button>";
+      });
+      if (mesActual) html += "</div>";
+      $("crono").innerHTML = html;
+    }
+
+    function renderLista(mapa) {
+      const hechos = new Set(state.hechos);
+      $("lista").innerHTML = ordenados().map((item) => {
+        const done = hechos.has(item.id);
+        const estado = mapa[item.id];
+        const extra = estado !== "entregado" && vencido(item.fecha) ? " · vencido" : "";
+        return '<button class="item' + (done ? " done" : "") + '" type="button" data-id="' + esc(item.id) + '" id="item-' + esc(item.id) + '" aria-pressed="' + done + '">'
+          + '<span class="box" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6.2 4.6 8.8 10 3.2" stroke="#102018" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+          + "<span><span class=\"item-title\">" + esc(item.titulo) + "</span>"
+          + '<span class="item-meta">' + esc(fechaCorta(item.fecha) + extra + " · " + item.detalle) + "</span></span>"
+          + '<span class="pill ' + estado + '">' + LABELS[estado] + "</span></button>";
+      }).join("");
+    }
+
+    function renderEstados(mapa) {
+      const grupos = { "en-proceso": [], entregado: [], "a-futuro": [] };
+      ordenados().forEach((item) => grupos[mapa[item.id]].push(item));
+      $("estados").innerHTML = ["en-proceso", "entregado", "a-futuro"].map((clave) => {
+        const lista = grupos[clave];
+        const cuerpo = lista.length
+          ? lista.map((item) => '<div class="chip"><span>' + esc(item.titulo)
+            + "<small>" + esc(fechaCorta(item.fecha) + (clave !== "entregado" && vencido(item.fecha) ? " · vencido" : ""))
+            + "</small></span></div>").join("")
+          : '<div class="empty">' + (clave === "entregado" ? "Todavía no hay entregas marcadas." : "Nada en este estado.") + "</div>";
+        return '<div class="lane ' + clave + '"><h3>' + LABELS[clave] + '<span class="count">' + lista.length + "</span></h3>" + cuerpo + "</div>";
+      }).join("");
+    }
+
+    function diasHasta(iso) {
+      return Math.round((parseFecha(iso) - inicioDeHoy()) / 86400000);
+    }
+
+    function renderIndicadores() {
+      const hoy = inicioDeHoy();
+      const items = ordenados();
+      const hechos = new Set(state.hechos);
+      const entregados = items.filter((item) => hechos.has(item.id));
+      const vencidos = items.filter((item) => !hechos.has(item.id) && parseFecha(item.fecha) < hoy);
+      const yaDebieron = items.filter((item) => parseFecha(item.fecha) <= hoy);
+      const yaHechos = yaDebieron.filter((item) => hechos.has(item.id));
+      const evaluaciones = items.filter((item) => item.tipo === "evaluacion");
+      const evalHechas = evaluaciones.filter((item) => hechos.has(item.id));
+      const deSprint = (nombre) => {
+        const lista = items.filter((item) => item.sprint === nombre);
+        return { ok: lista.filter((item) => hechos.has(item.id)).length, total: lista.length };
+      };
+      const s1 = deSprint("Sprint 1");
+      const s2 = deSprint("Sprint 2");
+      const total = items.length;
+      const pct = total ? Math.round((entregados.length / total) * 100) : 0;
+      const cumplimiento = yaDebieron.length ? Math.round((yaHechos.length / yaDebieron.length) * 100) : 100;
+      const proximo = items.find((item) => !hechos.has(item.id) && parseFecha(item.fecha) >= hoy)
+        || items.find((item) => !hechos.has(item.id));
+
+      let proximoValor = "Al día";
+      let proximoDetalle = "No quedan pendientes";
+      if (proximo) {
+        const delta = diasHasta(proximo.fecha);
+        proximoValor = proximo.titulo;
+        proximoDetalle = fechaCorta(proximo.fecha)
+          + (delta > 1 ? " · en " + delta + " días" : delta === 1 ? " · mañana" : delta === 0 ? " · hoy" : " · vencido");
+      }
+
+      const cards = [
+        { k: "Avance de la materia", v: pct + "%", d: entregados.length + " de " + total + " entregables", clase: pct === 100 ? "ok" : "" },
+        { k: "Cumplimiento a la fecha", v: cumplimiento + "%", d: yaHechos.length + " de " + yaDebieron.length + " con fecha cumplida", clase: cumplimiento < 100 ? "alerta" : "ok" },
+        { k: "Vencidos", v: String(vencidos.length), d: vencidos.length ? "Todavía sin marcar" : "Ninguno pendiente", clase: vencidos.length ? "alerta" : "ok" },
+        { k: "Evaluaciones", v: evalHechas.length + "/" + evaluaciones.length, d: "Pitch, defensa, presentaciones y finales" },
+        { k: "Sprint 1", v: s1.ok + "/" + s1.total, d: "23 sep al 7 oct" },
+        { k: "Sprint 2", v: s2.ok + "/" + s2.total, d: "14 oct al 28 oct" },
+        { k: "Próximo hito", v: proximoValor, d: proximoDetalle, clase: "wide" }
+      ];
+
+      $("indicadores").innerHTML = cards.map((card) =>
+        '<article class="kpi ' + (card.clase || "") + '">'
+        + '<div class="kpi-k">' + esc(card.k) + "</div>"
+        + '<div class="kpi-v">' + esc(card.v) + "</div>"
+        + '<div class="kpi-d">' + esc(card.d) + "</div></article>"
+      ).join("");
+
+      const fase = parseFecha("2026-09-23") <= hoy && hoy <= parseFecha("2026-10-28")
+        ? " Están en la fase de desarrollo del MVP."
+        : "";
+      $("situacion").textContent = vencidos.length
+        ? "Hay " + vencidos.length + (vencidos.length === 1 ? " entrega vencida" : " entregas vencidas") + " y el próximo hito es " + (proximo ? proximo.titulo : "el cierre") + "." + fase
+        : "No hay entregas vencidas. El próximo hito es " + (proximo ? proximo.titulo : "el cierre de la materia") + "." + fase;
+    }
+
+    function render() {
+      const mapa = clasificar();
+      renderProgreso();
+      renderIndicadores();
+      renderCrono(mapa);
+      renderLista(mapa);
+      renderEstados(mapa);
+    }
+
+    $("nombre").addEventListener("input", (event) => {
+      state.nombre = event.target.value;
+      save();
+    });
+
+    $("lista").addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-id]");
+      if (!btn) return;
+      const i = state.hechos.indexOf(btn.dataset.id);
+      if (i >= 0) state.hechos.splice(i, 1);
+      else state.hechos.push(btn.dataset.id);
+      save();
+      render();
+    });
+
+    $("crono").addEventListener("click", (event) => {
+      const btn = event.target.closest("[data-jump]");
+      if (!btn) return;
+      document.querySelectorAll(".event").forEach((el) => el.classList.remove("active"));
+      btn.classList.add("active");
+      const destino = $("item-" + btn.dataset.jump);
+      if (!destino) return;
+      destino.scrollIntoView({ behavior: "smooth", block: "center" });
+      destino.classList.add("flash");
+      setTimeout(() => destino.classList.remove("flash"), 1400);
+    });
+
+    $("reset").addEventListener("click", () => {
+      if (!state.hechos.length) return;
+      if (!confirm("¿Borrar todas las marcas de entregado en este navegador?")) return;
+      state.hechos = [];
+      save();
+      render();
+    });
+
+    // ===== Sprint en vivo: lee del Google Sheet del equipo =====
+    const SHEET = {
+      id: "18EouMBBBP1OW9eSuAJeY97fh6iwxb5PO9NEVlLpuZtE",
+      sprints: [
+        { nombre: "Sprint 1", hoja: "Sprint 1" },
+        { nombre: "Sprint 2", hoja: "Sprint 2" }
+      ],
+      refrescoMs: 45000
+    };
+
+    // Carga por JSONP (<script>) para que funcione tambien abriendo el archivo con doble clic (file://),
+    // donde fetch() a Google queda bloqueado por CORS. La etiqueta <script> no tiene esa restriccion.
+    function cargarHojaJSONP(hoja) {
+      return new Promise((resolve, reject) => {
+        const cb = "__gviz_" + Math.random().toString(36).slice(2);
+        const script = document.createElement("script");
+        let done = false;
+        const limpiar = () => { try { delete window[cb]; } catch (e) { window[cb] = undefined; } script.remove(); };
+        const timer = setTimeout(() => { if (!done) { done = true; limpiar(); reject(new Error("timeout")); } }, 15000);
+        window[cb] = (resp) => {
+          done = true; clearTimeout(timer); limpiar();
+          try {
+            const rows = ((resp.table && resp.table.rows) || []).map(
+              (r) => (r.c || []).map((c) => (c && c.v != null) ? c.v : "")
+            );
+            resolve(rows);
+          } catch (e) { reject(e); }
+        };
+        script.onerror = () => { if (!done) { done = true; clearTimeout(timer); limpiar(); reject(new Error("script error")); } };
+        script.src = "https://docs.google.com/spreadsheets/d/" + SHEET.id +
+          "/gviz/tq?tqx=out:json;responseHandler:" + cb +
+          "&sheet=" + encodeURIComponent(hoja) + "&headers=0&_=" + Date.now();
+        document.head.appendChild(script);
+      });
+    }
+
+    const ESTADO_CLASE = {
+      "done": "e-done", "doing": "e-doing", "en prueba": "e-en-prueba",
+      "blocked": "e-blocked", "to do": "e-to-do"
+    };
+    const esHistoria = (id) => /^(HU|QA|ENB)/i.test((id || "").trim());
+
+    function procesarSprint(rows) {
+      const historias = [];
+      let goal = "";
+      for (const r of rows) {
+        const a = (r[0] || "").trim();
+        if (a === "Sprint Goal") { goal = (r[1] || "").trim(); continue; }
+        if (esHistoria(a)) {
+          historias.push({
+            id: a,
+            titulo: (r[1] || "").trim(),
+            puntos: parseFloat(String(r[3] || "").replace(",", ".")) || 0,
+            estado: (r[6] || "").trim()
+          });
+        }
+      }
+      const done = historias.filter((h) => h.estado.toLowerCase() === "done");
+      const puntosTotal = historias.reduce((s, h) => s + h.puntos, 0);
+      const puntosDone = done.reduce((s, h) => s + h.puntos, 0);
+      return { goal, historias, doneCount: done.length, total: historias.length, puntosDone, puntosTotal };
+    }
+
+    function renderSprintCard(nombre, d) {
+      const pct = d.puntosTotal ? Math.round((d.puntosDone / d.puntosTotal) * 100) : 0;
+      const filas = d.historias.map((h) => {
+        const cls = ESTADO_CLASE[h.estado.toLowerCase()] || "e-to-do";
+        return '<div class="hu-row">' +
+          '<span class="hu-id">' + esc(h.id) + '</span>' +
+          '<span class="hu-title">' + esc(h.titulo) + '</span>' +
+          '<span class="hu-pts">' + (h.puntos || "") + '</span>' +
+          '<span class="hu-estado ' + cls + '">' + esc(h.estado || "—") + '</span>' +
+          '</div>';
+      }).join("") || '<div class="sprint-empty">Sin historias cargadas.</div>';
+      return '<div class="sprint-card">' +
+        '<h3>' + esc(nombre) + '</h3>' +
+        (d.goal ? '<p class="goal">' + esc(d.goal) + '</p>' : "") +
+        '<div class="sprint-metrics">' +
+          '<div class="sprint-metric"><div class="n">' + d.doneCount + '/' + d.total + '</div><div class="l">Historias Done</div></div>' +
+          '<div class="sprint-metric"><div class="n">' + d.puntosDone + '/' + d.puntosTotal + '</div><div class="l">Puntos</div></div>' +
+          '<div class="sprint-metric"><div class="n">' + pct + '%</div><div class="l">Avance</div></div>' +
+        '</div>' +
+        '<div class="sprint-bar"><i style="width:' + pct + '%"></i></div>' +
+        filas +
+      '</div>';
+    }
+
+    async function cargarSprintLive() {
+      try {
+        const datos = await Promise.all(SHEET.sprints.map(async (s) => {
+          const rows = await cargarHojaJSONP(s.hoja);
+          return { nombre: s.nombre, d: procesarSprint(rows) };
+        }));
+        $("sprint-cards").innerHTML = datos.map((x) => renderSprintCard(x.nombre, x.d)).join("");
+        const dot = $("live-dot"); if (dot) dot.classList.remove("err");
+        const hora = new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        $("sprint-updated").textContent = "Actualizado " + hora + " · se refresca solo cada 45 s";
+      } catch (e) {
+        const dot = $("live-dot"); if (dot) dot.classList.add("err");
+        $("sprint-updated").textContent = "No pude leer la planilla. Compartila como 'cualquiera con el link puede ver'.";
+      }
+    }
+
+    function initSprintLive() {
+      cargarSprintLive();
+      setInterval(cargarSprintLive, SHEET.refrescoMs);
+    }
+
+    renderCabeza();
+    render();
+    initSprintLive();
+  </script>
+</body>
+</html>

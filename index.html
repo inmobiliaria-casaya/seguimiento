@@ -534,7 +534,7 @@
         </div>
         <div class="checklist-tools">
           <span class="panel-note" id="pendientes-copy"></span>
-          <button class="ghost" id="reset" type="button">Reiniciar marcas</button>
+          <button class="ghost" id="reset" type="button">Actualizar</button>
         </div>
         <div class="list" id="lista"></div>
       </section>
@@ -818,11 +818,7 @@
     $("lista").addEventListener("click", (event) => {
       const btn = event.target.closest("[data-id]");
       if (!btn) return;
-      const i = state.hechos.indexOf(btn.dataset.id);
-      if (i >= 0) state.hechos.splice(i, 1);
-      else state.hechos.push(btn.dataset.id);
-      save();
-      render();
+      toggleChecklist(btn.dataset.id);
     });
 
     $("crono").addEventListener("click", (event) => {
@@ -838,12 +834,58 @@
     });
 
     $("reset").addEventListener("click", () => {
-      if (!state.hechos.length) return;
-      if (!confirm("¿Borrar todas las marcas de entregado en este navegador?")) return;
-      state.hechos = [];
-      save();
-      render();
+      fetchChecklist();
     });
+
+    // ===== Checklist compartido (lee/escribe en el Google Sheet via Apps Script) =====
+    const CHECKLIST = {
+      url: "https://script.google.com/macros/s/AKfycbxNIVyd_RuP5zn5METV-r-7KTQqNcXNARnZD0p2W3Fx-nnTyn4mhkfJ7u4q36dTaRW0/exec",
+      refrescoMs: 20000
+    };
+
+    function jsonp(baseUrl) {
+      return new Promise((resolve, reject) => {
+        const cb = "__cb_" + Math.random().toString(36).slice(2);
+        const sep = baseUrl.indexOf("?") >= 0 ? "&" : "?";
+        const script = document.createElement("script");
+        let done = false;
+        const limpiar = () => { try { delete window[cb]; } catch (e) { window[cb] = undefined; } script.remove(); };
+        const timer = setTimeout(() => { if (!done) { done = true; limpiar(); reject(new Error("timeout")); } }, 15000);
+        window[cb] = (resp) => { done = true; clearTimeout(timer); limpiar(); resolve(resp); };
+        script.onerror = () => { if (!done) { done = true; clearTimeout(timer); limpiar(); reject(new Error("script error")); } };
+        script.src = baseUrl + sep + "callback=" + cb + "&_=" + Date.now();
+        document.head.appendChild(script);
+      });
+    }
+
+    function hechosDesde(estado) {
+      return Object.keys(estado || {}).filter((id) => estado[id] && estado[id].done);
+    }
+
+    async function fetchChecklist() {
+      try {
+        const r = await jsonp(CHECKLIST.url + "?action=get");
+        if (r && r.estado) { state.hechos = hechosDesde(r.estado); save(); render(); }
+      } catch (e) { /* sin conexion: queda el ultimo estado conocido */ }
+    }
+
+    async function toggleChecklist(id) {
+      const nuevo = state.hechos.indexOf(id) < 0; // nuevo estado (marcar/desmarcar)
+      // actualizacion optimista para que se sienta instantaneo
+      if (nuevo) { if (state.hechos.indexOf(id) < 0) state.hechos.push(id); }
+      else { const i = state.hechos.indexOf(id); if (i >= 0) state.hechos.splice(i, 1); }
+      save(); render();
+      try {
+        const r = await jsonp(CHECKLIST.url + "?action=toggle&id=" + encodeURIComponent(id) +
+          "&done=" + nuevo + "&nombre=" + encodeURIComponent(state.nombre || ""));
+        if (r && r.estado) { state.hechos = hechosDesde(r.estado); save(); render(); }
+      } catch (e) { fetchChecklist(); }
+    }
+
+    function initChecklist() {
+      fetchChecklist();
+      setInterval(fetchChecklist, CHECKLIST.refrescoMs);
+    }
 
     // ===== Sprint en vivo: lee del Google Sheet del equipo =====
     const SHEET = {
@@ -956,6 +998,7 @@
     renderCabeza();
     render();
     initSprintLive();
+    initChecklist();
   </script>
 </body>
 </html>
